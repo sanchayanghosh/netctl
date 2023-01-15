@@ -1,0 +1,29 @@
+# Contributed by: Rémy Oudompheng <remy@archlinux.org>
+
+. "$SUBR_DIR/ip"
+
+# Make sure BindsToInterfaces is set
+BindsToInterfaces=("${BindsToInterfaces[@]}")
+
+ipvtap_up() {
+    if is_interface "$Interface"; then
+        report_error "Interface '$Interface' already exists"
+        return 1
+    fi
+
+    echo "ip link add link ${BindsToInterfaces} name "$Interface" type "$Connection" mode "$Mode" bridge"
+
+    do_debug ip link add link ${BindsToInterfaces} name "$Interface" type "$Connection" mode "$Mode" bridge || return
+
+    bring_interface_up "$Interface"
+    IP=${IP-no} ip_set
+}
+
+ipvtap_down() {
+    ip_unset
+    bring_interface_down "$Interface"
+    ip link delete name "$Interface"
+}
+
+
+# vim: ft=sh ts=4 et sw=4:

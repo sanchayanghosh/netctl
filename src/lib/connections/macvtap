@@ -1,0 +1,35 @@
+# Contributed by: Rémy Oudompheng <remy@archlinux.org>
+
+. "$SUBR_DIR/ip"
+
+# Make sure BindsToInterfaces is set
+BindsToInterfaces=("${BindsToInterfaces[@]}")
+macaddress="$MacAddress"
+
+macvtap_up() {
+    if is_interface "$Interface"; then
+        report_error "Interface '$Interface' already exists"
+        return 1
+    fi
+
+    if [ "$macaddress" == "" ]; then
+        report_error "Macvtap $Interface needs a mac address to get assigned to."
+        return 2
+    fi
+
+    echo "ip link add link ${BindsToInterfaces} name "$Interface" address "$macaddress" type "$Connection" mode bridge"
+
+    do_debug ip link add link ${BindsToInterfaces} name "$Interface" address "$macaddress" type "$Connection" mode bridge || return
+
+    bring_interface_up "$Interface"
+    IP=${IP-no} ip_set
+}
+
+macvtap_down() {
+    ip_unset
+    bring_interface_down "$Interface"
+    ip link delete name "$Interface"
+}
+
+
+# vim: ft=sh ts=4 et sw=4:
